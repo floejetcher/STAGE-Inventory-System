@@ -51,7 +51,10 @@ PRESET_CATEGORIES = [
 st.sidebar.image("logo.png", width=216)  # small logo above the title
 st.sidebar.title("STAGE Inventory")
 st.sidebar.caption(f"Signed in as: {current_user()} ({current_role()})")
-st.sidebar.button("Log out", on_click=logout)
+
+if st.sidebar.button("Log out"):
+    logout()
+    st.rerun()
 
 # Moved announcements below the navigation radio
 guest_pages = ["Browse & Filter", "Location Report"]
@@ -134,13 +137,22 @@ def render_rows_with_image_buttons(rows):
         cols[4].write(r["location"])
         cols[5].write("Yes" if r["in_use"] else "No")
 
+        # Toggle show/hide image per item
+        flag_key = f"show_img_{r['id']}"
+        shown = st.session_state.get(flag_key, False)
+
         if has_item_image(r["id"]):
-            if cols[6].button("View Image", key=f"view_image_{r['id']}"):
-                img_path = get_item_image(r["id"])
-                if img_path:
-                    st.image(img_path, use_column_width=True, caption=f"#{r['id']} — {r['name']}")
+            label = "Hide Image" if shown else "View Image"
+            if cols[6].button(label, key=f"view_image_btn_{r['id']}"):
+                st.session_state[flag_key] = not shown
+                st.rerun()
         else:
-            cols[6].write("")  # keep layout aligned
+            cols[6].empty()
+
+        if st.session_state.get(flag_key):
+            img_path = get_item_image(r["id"])
+            if img_path:
+                st.image(img_path, use_column_width=True, caption=f"#{r['id']} — {r['name']}")
 
 if page == "Browse & Filter":  # SC4
     st.header("Browse & Filter")
@@ -292,7 +304,7 @@ elif page == "Location Report":  # SC5
                 if cols[2].button("View Image", key=f"report_view_image_{r['id']}"):
                     img_path = get_item_image(r["id"])
                     if img_path:
-                        st.image(img_path, use_column_width=True, caption=f"#{r['id']} — {r['name']}")
+                        st.image(img_path, use_container_width=True, caption=f"#{r['id']} — {r['name']}")
 
         df = pd.DataFrame(rows)
         csv = df.to_csv(index=False)

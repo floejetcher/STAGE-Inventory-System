@@ -43,9 +43,8 @@ def login() -> bool:
 
 def logout():
     for k in ("user", "role"):
-        if k in st.session_state:
-            del st.session_state[k]
-    st.rerun()
+        st.session_state.pop(k, None)
+    # Do not call st.rerun() here; trigger it from normal code after the button press.
 
 def current_user() -> str | None:
     return st.session_state.get("user")
