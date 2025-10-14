@@ -84,37 +84,6 @@ available_pages = admin_pages if is_admin() else guest_pages
 
 page = st.sidebar.radio("Navigate", available_pages)  # SC1, SC2, SC4, SC5
 
-# --- Mini STAGE Announcement board (top-right, visible to all) ---
-with st.container():
-    _, right = st.columns([4, 2])  # right column hosts the announcement board
-    with right:
-        st.markdown("### STAGE Announcements")
-        anns = load_announcements(limit=5)
-        if anns:
-            for a in anns:
-                c1, c2 = st.columns([6, 1])
-                with c1:
-                    st.markdown(f"- {a['text']}  \n  ⸺ {a.get('author', 'Unknown')}")
-                if is_admin():
-                    if c2.button("✕", key=f"del_ann_{a['id']}", help="Delete"):
-                        delete_announcement(a["id"])
-                        st.rerun()
-        else:
-            st.caption("No announcements yet.")
-
-        if is_admin():
-            with st.form("post_announcement", clear_on_submit=True):
-                new_text = st.text_input("Post an update", placeholder="Short announcement...")
-                submitted = st.form_submit_button("Post")
-                if submitted:
-                    if new_text.strip():
-                        add_announcement(new_text.strip(), current_user() or "Admin")
-                        st.success("Announcement posted.")
-                        st.rerun()
-                    else:
-                        st.warning("Enter some text to post.")
-# --- End Announcement board ---
-
 # Admin-only utilities
 if is_admin():
     with st.sidebar.expander("Utilities"):
