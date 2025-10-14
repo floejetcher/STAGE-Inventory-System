@@ -53,7 +53,14 @@ st.sidebar.title("STAGE Inventory")
 st.sidebar.caption(f"Signed in as: {current_user()} ({current_role()})")
 st.sidebar.button("Log out", on_click=logout)
 
-# STAGE Announcements (in sidebar)
+# Moved announcements below the navigation radio
+guest_pages = ["Browse & Filter", "Location Report"]
+admin_pages = guest_pages + ["Add Item", "Edit Item"]
+available_pages = admin_pages if is_admin() else guest_pages
+
+page = st.sidebar.radio("Navigate", available_pages)  # SC1, SC2, SC4, SC5
+
+# STAGE Announcements (in sidebar, now below navigation)
 with st.sidebar.expander("STAGE Announcements", expanded=True):
     anns = load_announcements(limit=5)
     if anns:
@@ -77,12 +84,6 @@ with st.sidebar.expander("STAGE Announcements", expanded=True):
                     st.rerun()
                 else:
                     st.warning("Enter some text to post.")
-
-guest_pages = ["Browse & Filter", "Location Report"]
-admin_pages = guest_pages + ["Add Item", "Edit Item"]
-available_pages = admin_pages if is_admin() else guest_pages
-
-page = st.sidebar.radio("Navigate", available_pages)  # SC1, SC2, SC4, SC5
 
 # Admin-only utilities
 if is_admin():
