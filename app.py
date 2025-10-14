@@ -1,11 +1,16 @@
 import streamlit as st
 import pandas as pd
 from inventory_db import init_db, add_item, update_item, list_items, get_item, set_in_use, get_locations, get_tags, get_categories, delete_item, add_location
+from auth import login, logout
 
 st.set_page_config(page_title="STAGE Inventory", page_icon="🎭", layout="wide")
 
 # Ensure DB exists
 init_db()
+
+# Require authentication before showing the app
+if not login():
+    st.stop()
 
 # Presets
 def current_locations():
@@ -41,6 +46,8 @@ PRESET_CATEGORIES = [
 
 # Sidebar navigation
 st.sidebar.title("STAGE Inventory")
+st.sidebar.caption(f"Signed in as: {st.session_state.get('user', 'Unknown')}")
+st.sidebar.button("Log out", on_click=logout)
 page = st.sidebar.radio("Navigate", ["Browse & Filter", "Add Item", "Edit Item", "Location Report"])  # SC1, SC2, SC4, SC5
 
 # (Filters moved into main Browse & Filter page)
