@@ -8,6 +8,16 @@ from item_images import get_item_image, has_item_image, save_item_image, remove_
 
 st.set_page_config(page_title="STAGE Inventory", page_icon="🎭", layout="wide")
 
+# Make select dropdowns taller and scrollable
+st.markdown("""
+<style>
+/* Increase dropdown (select) menu height and ensure scrolling */
+div[data-baseweb="select"] div[role="listbox"] {
+  max-height: 420px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Ensure DB exists
 init_db()
 
@@ -142,9 +152,9 @@ def render_rows_with_image_buttons(rows):
         shown = st.session_state.get(flag_key, False)
 
         if has_item_image(r["id"]):
-            label = "Hide Image" if shown else "View Image"
+            label = "Hide Image" if st.session_state.get(flag_key := f"show_img_{r['id']}", False) else "View Image"
             if cols[6].button(label, key=f"view_image_btn_{r['id']}"):
-                st.session_state[flag_key] = not shown
+                st.session_state[flag_key] = not st.session_state.get(flag_key, False)
                 st.rerun()
         else:
             cols[6].empty()
@@ -152,7 +162,7 @@ def render_rows_with_image_buttons(rows):
         if st.session_state.get(flag_key):
             img_path = get_item_image(r["id"])
             if img_path:
-                st.image(img_path, use_column_width=True, caption=f"#{r['id']} — {r['name']}")
+                st.image(img_path, use_container_width=True, caption=f"#{r['id']} — {r['name']}")
 
 if page == "Browse & Filter":  # SC4
     st.header("Browse & Filter")
@@ -301,7 +311,14 @@ elif page == "Location Report":  # SC5
                 st.rerun()
 
             if has_item_image(r["id"]):
-                if cols[2].button("View Image", key=f"report_view_image_{r['id']}"):
+                flag_key = f"show_img_report_{r['id']}"
+                shown = st.session_state.get(flag_key, False)
+                label = "Hide Image" if shown else "View Image"
+                if cols[2].button(label, key=f"report_img_btn_{r['id']}"):
+                    st.session_state[flag_key] = not shown
+                    st.rerun()
+
+                if st.session_state.get(flag_key):
                     img_path = get_item_image(r["id"])
                     if img_path:
                         st.image(img_path, use_container_width=True, caption=f"#{r['id']} — {r['name']}")
