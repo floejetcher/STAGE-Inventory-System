@@ -11,24 +11,6 @@ st.set_page_config(page_title="STAGE Inventory", page_icon="🎭", layout="wide"
 # Ensure DB exists
 init_db()
 
-# Footer: bottom-left credit
-st.markdown(
-    """
-    <style>
-      .stAppFooter {
-        position: fixed;
-        left: 0.75rem;
-        bottom: 0.5rem;
-        font-size: 0.85rem;
-        color: rgba(49, 51, 63, 0.6);
-        z-index: 9999;
-      }
-    </style>
-    <div class="stAppFooter">Application Made By Joe Fletcher</div>
-    """,
-    unsafe_allow_html=True,
-)
-
 # Require authentication before showing the app
 if not login():
     st.stop()
@@ -66,10 +48,35 @@ PRESET_CATEGORIES = [
 ]
 
 # Sidebar navigation (role-aware)
-st.sidebar.image("logo.png", width=72)  # small logo above the title
+st.sidebar.image("logo.png", width=216)  # small logo above the title
 st.sidebar.title("STAGE Inventory")
 st.sidebar.caption(f"Signed in as: {current_user()} ({current_role()})")
 st.sidebar.button("Log out", on_click=logout)
+
+# STAGE Announcements (in sidebar)
+with st.sidebar.expander("STAGE Announcements", expanded=True):
+    anns = load_announcements(limit=5)
+    if anns:
+        for a in anns:
+            st.markdown(f"- {a['text']}  \n  ⸺ {a.get('author', 'Unknown')}")
+            if is_admin():
+                if st.button("Delete", key=f"del_ann_{a['id']}"):
+                    delete_announcement(a["id"])
+                    st.rerun()
+            st.markdown("---")
+    else:
+        st.caption("No announcements yet.")
+
+    if is_admin():
+        with st.form("post_announcement_sidebar", clear_on_submit=True):
+            new_text = st.text_input("Post an update", placeholder="Short announcement...")
+            submitted = st.form_submit_button("Post")
+            if submitted:
+                if new_text.strip():
+                    add_announcement(new_text.strip(), current_user() or "Admin")
+                    st.rerun()
+                else:
+                    st.warning("Enter some text to post.")
 
 guest_pages = ["Browse & Filter", "Location Report"]
 admin_pages = guest_pages + ["Add Item", "Edit Item"]
@@ -322,3 +329,21 @@ elif page == "Location Report":  # SC5
         st.download_button("Download CSV", data=csv, file_name=f"location_report_{location.replace(' ', '_')}.csv", mime="text/csv")
     else:
         st.info("No items found for this selection.")
+
+# Footer: bottom-left credit
+st.markdown(
+    """
+    <style>
+      .stAppFooter {
+        position: fixed;
+        left: 0.75rem;
+        bottom: 0.5rem;
+        font-size: 0.85rem;
+        color: rgba(49, 51, 63, 0.6);
+        z-index: 9999;
+      }
+    </style>
+    <div class="stAppFooter">Application Made By Joe Fletcher</div>
+    """,
+    unsafe_allow_html=True,
+)
