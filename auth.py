@@ -12,12 +12,12 @@ def load_credentials():
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def authenticate(username: str, password: str) -> bool:
+def authenticate(username: str, password: str):
     creds = load_credentials()
     for u in creds.get("users", []):
         if u.get("username") == username and u.get("password") == password:
-            return True
-    return False
+            return {"username": u.get("username"), "role": u.get("role", "guest")}
+    return None
 
 def login() -> bool:
     # Already authenticated
@@ -32,14 +32,26 @@ def login() -> bool:
         submitted = st.form_submit_button("Sign in")
 
     if submitted:
-        if authenticate(username.strip(), password):
-            st.session_state["user"] = username.strip()
+        user = authenticate(username.strip(), password)
+        if user:
+            st.session_state["user"] = user["username"]
+            st.session_state["role"] = user.get("role", "guest")
             st.rerun()
         else:
             st.error("Invalid username or password.")
     return False
 
 def logout():
-    if "user" in st.session_state:
-        del st.session_state["user"]
+    for k in ("user", "role"):
+        if k in st.session_state:
+            del st.session_state[k]
     st.rerun()
+
+def current_user() -> str | None:
+    return st.session_state.get("user")
+
+def current_role() -> str:
+    return st.session_state.get("role", "guest")
+
+def is_admin() -> bool:
+    return current_role() == "admin"
